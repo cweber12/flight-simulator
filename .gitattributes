@@ -1,0 +1,43 @@
+* text=auto
+
+*.cs text
+*.md text
+*.json text
+*.asmdef text
+*.inputactions text
+
+*.unity text
+*.prefab text
+*.mat text
+*.asset text
+*.meta text
+*.controller text
+*.anim text
+*.overrideController text
+*.playable text
+*.shader text
+*.compute text
+*.uxml text
+*.uss text
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.tga binary
+*.psd binary
+*.exr binary
+*.hdr binary
+
+*.fbx binary
+*.obj binary
+*.blend binary
+*.dae binary
+
+*.wav binary
+*.mp3 binary
+*.ogg binary
+*.aiff binary
+
+*.ttf binary
+*.otf binary

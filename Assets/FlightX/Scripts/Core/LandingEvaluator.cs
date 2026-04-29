@@ -6,6 +6,10 @@ namespace FlightX.Core
 {
     public class LandingEvaluator : MonoBehaviour
     {
+        private const float DefaultSafeVerticalSpeed = 4f;
+        private const float DefaultMaxStablePitchAngle = 12f;
+        private const float DefaultMaxStableRollAngle = 8f;
+
         [SerializeField, Tooltip("Aircraft physics source used to detect touchdown and measure speeds.")]
         private AircraftPhysics aircraftPhysics;
 
@@ -16,10 +20,10 @@ namespace FlightX.Core
         private RunwayZone runwayZone;
 
         [SerializeField, Tooltip("Pitch angle beyond this value is considered unstable at touchdown.")]
-        private float maxStablePitchAngle = 12f;
+        private float maxStablePitchAngle = DefaultMaxStablePitchAngle;
 
         [SerializeField, Tooltip("Roll angle beyond this value is considered unstable at touchdown.")]
-        private float maxStableRollAngle = 8f;
+        private float maxStableRollAngle = DefaultMaxStableRollAngle;
 
         public LandingResult LastLandingResult { get; private set; }
         public bool HasLandingResult { get; private set; }
@@ -56,9 +60,32 @@ namespace FlightX.Core
             float pitchAngle = NormalizeAngle(aircraftPhysics.transform.eulerAngles.x);
             float rollAngle = NormalizeAngle(aircraftPhysics.transform.eulerAngles.z);
 
+            float safeVerticalSpeed = aircraftPhysics.Settings != null ? aircraftPhysics.Settings.MaxSafeLandingVerticalSpeed : DefaultSafeVerticalSpeed;
+            LastLandingResult = EvaluateTouchdown(
+                verticalSpeed,
+                forwardSpeed,
+                wasOnRunway,
+                pitchAngle,
+                rollAngle,
+                safeVerticalSpeed,
+                maxStablePitchAngle,
+                maxStableRollAngle);
+            HasLandingResult = true;
+        }
+
+        // Prototype scoring is intentionally simple and deterministic so it can be tuned and tested without physics simulation.
+        public static LandingResult EvaluateTouchdown(
+            float verticalSpeedMetersPerSecond,
+            float forwardSpeedMetersPerSecond,
+            bool wasOnRunway,
+            float pitchAngle,
+            float rollAngle,
+            float maxSafeVerticalSpeed = DefaultSafeVerticalSpeed,
+            float maxStablePitchAngle = DefaultMaxStablePitchAngle,
+            float maxStableRollAngle = DefaultMaxStableRollAngle)
+        {
             int score = 100;
-            float safeVerticalSpeed = aircraftPhysics.Settings != null ? aircraftPhysics.Settings.MaxSafeLandingVerticalSpeed : 4f;
-            float verticalSpeedPenalty = Mathf.Max(0f, Mathf.Abs(verticalSpeed) - safeVerticalSpeed) * 12f;
+            float verticalSpeedPenalty = Mathf.Max(0f, Mathf.Abs(verticalSpeedMetersPerSecond) - maxSafeVerticalSpeed) * 12f;
             score -= Mathf.RoundToInt(verticalSpeedPenalty);
 
             if (!wasOnRunway)
@@ -70,21 +97,27 @@ namespace FlightX.Core
             score -= Mathf.RoundToInt(Mathf.Max(0f, Mathf.Abs(rollAngle) - maxStableRollAngle) * 3f);
             score = Mathf.Clamp(score, 0, 100);
 
-            string message = BuildMessage(score, verticalSpeed, safeVerticalSpeed, wasOnRunway, pitchAngle, rollAngle);
-            LastLandingResult = new LandingResult(
+            string message = BuildMessage(score, verticalSpeedMetersPerSecond, maxSafeVerticalSpeed, wasOnRunway, pitchAngle, rollAngle, maxStablePitchAngle, maxStableRollAngle);
+            return new LandingResult(
                 score >= 60,
                 score,
                 message,
-                verticalSpeed,
-                forwardSpeed,
+                verticalSpeedMetersPerSecond,
+                forwardSpeedMetersPerSecond,
                 wasOnRunway,
                 pitchAngle,
                 rollAngle);
-
-            HasLandingResult = true;
         }
 
-        private string BuildMessage(float score, float verticalSpeed, float safeVerticalSpeed, bool wasOnRunway, float pitchAngle, float rollAngle)
+        private static string BuildMessage(
+            float score,
+            float verticalSpeed,
+            float safeVerticalSpeed,
+            bool wasOnRunway,
+            float pitchAngle,
+            float rollAngle,
+            float maxStablePitchAngle,
+            float maxStableRollAngle)
         {
             if (!wasOnRunway)
             {
