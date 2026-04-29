@@ -47,7 +47,13 @@ The workflow validates the secret combination before starting Unity. It fails ea
 
 ## Special Characters In Passwords
 
-GameCI serial activation passes `UNITY_PASSWORD` into the Docker-based Unity activation command. Passwords containing shell metacharacters such as `>`, `<`, `|`, `&`, `$`, backticks, or quotes can break the generated Docker command before Unity starts.
+GameCI activation passes `UNITY_PASSWORD` into Docker-based Unity commands. Passwords containing whitespace or shell metacharacters can break the generated command before Unity starts.
+
+Avoid these characters in the Unity password used for CI:
+
+```text
+space, tab, newline, ', ", `, \, $, !, ;, &, |, <, >, (, ), {, }, [, ], *, ?, ~, #
+```
 
 Recommended fix:
 
@@ -89,6 +95,41 @@ The older GitHub activation-file action has been deprecated. You do not need tha
 6. Commit only source, settings, tests, and docs.
 7. Push to GitHub and check the `Unity Tests` workflow.
 
+## Downloading Failed Run Logs
+
+GitHub-hosted runners cannot push logs directly into your local checkout. The workflow uploads Unity diagnostics as artifacts, and this repo includes a local helper script to download logs and artifacts into an ignored folder for Codex or other agents to inspect.
+
+Requirements:
+
+- GitHub CLI installed
+- `gh auth login` completed for this repository
+
+Download the latest failed `Unity Tests` run:
+
+```powershell
+.\.github\scripts\Download-GitHubActionsLogs.ps1
+```
+
+Download a specific run:
+
+```powershell
+.\.github\scripts\Download-GitHubActionsLogs.ps1 -RunId 1234567890
+```
+
+Logs are written under `gh-actions-logs/<run-id>/`. This folder is ignored by Git because CI logs may contain sensitive context.
+
+## Duplicate Test Runner References
+
+Unity test asmdefs should use exactly one mechanism for Unity Test Framework references. In this project, the test asmdefs keep:
+
+```json
+"optionalUnityReferences": [
+  "TestAssemblies"
+]
+```
+
+Do not also add `UnityEngine.TestRunner` or `UnityEditor.TestRunner` to the same asmdef `references` array. Unity 6 expands `TestAssemblies` into the test runner references during import, and explicit duplicates cause CI to abort with `Scripts have compiler errors` before EditMode or PlayMode tests can run.
+
 ## CI Failure Review Prompts
 
 Use these prompts when asking Codex to investigate future workflow failures:
@@ -99,6 +140,13 @@ Identify the first fatal error, distinguish it from noisy non-fatal log lines, a
 Patch the workflow only if the repository can make the failure clearer or prevent it.
 Do not change Unity packages or generated Unity folders.
 Validate YAML and summarize the manual GitHub secret changes still required.
+```
+
+```text
+Review the latest downloaded GitHub Actions logs under gh-actions-logs/.
+Identify the first failing job and step, classify the failure as licensing, import, compile, test, cache, artifact, or workflow syntax, then implement safe workflow or documentation improvements.
+Do not commit logs or artifacts.
+Validate YAML before summarizing the fix.
 ```
 
 ```text

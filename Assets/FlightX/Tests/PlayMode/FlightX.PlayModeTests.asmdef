@@ -2,8 +2,7 @@
     "name": "FlightX.PlayModeTests",
     "rootNamespace": "FlightX.Tests",
     "references": [
-        "FlightX.Runtime",
-        "UnityEngine.TestRunner"
+        "FlightX.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

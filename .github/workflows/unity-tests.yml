@@ -52,6 +52,17 @@ jobs:
             exit 1
           fi
 
+      - name: Verify Unity test assemblies avoid duplicate Test Runner references
+        shell: bash
+        run: |
+          set -euo pipefail
+          duplicate_test_runner_refs="$(grep -R -l '"optionalUnityReferences"' Assets/FlightX/Tests --include='*.asmdef' | xargs -r grep -l '"UnityEngine.TestRunner"\|"UnityEditor.TestRunner"' || true)"
+          if [ -n "$duplicate_test_runner_refs" ]; then
+            echo "Test asmdefs must not combine optionalUnityReferences/TestAssemblies with explicit Unity Test Runner references:"
+            echo "$duplicate_test_runner_refs"
+            exit 1
+          fi
+
   unity-tests:
     name: Unity ${{ matrix.testMode }} Tests
     runs-on: ubuntu-latest
@@ -119,6 +130,7 @@ jobs:
         if: env.HAS_PERSONAL_LICENSE == 'true' && env.HAS_PRO_LICENSE != 'true' && env.HAS_BOTH_LICENSE_TYPES != 'true'
         uses: game-ci/unity-test-runner@v4.3.1
         env:
+          HOME: /github/home
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
@@ -132,6 +144,7 @@ jobs:
         if: env.HAS_PRO_LICENSE == 'true' && env.HAS_PERSONAL_LICENSE != 'true' && env.HAS_BOTH_LICENSE_TYPES != 'true'
         uses: game-ci/unity-test-runner@v4.3.1
         env:
+          HOME: /github/home
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
@@ -141,10 +154,60 @@ jobs:
           testMode: ${{ matrix.testMode }}
           githubToken: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Collect Unity diagnostics
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          diagnostics_dir="ci-diagnostics/${{ matrix.testMode }}"
+          mkdir -p "$diagnostics_dir"
+
+          {
+            echo "workflow=${GITHUB_WORKFLOW}"
+            echo "run_id=${GITHUB_RUN_ID}"
+            echo "run_attempt=${GITHUB_RUN_ATTEMPT}"
+            echo "job=${GITHUB_JOB}"
+            echo "sha=${GITHUB_SHA}"
+            echo "ref=${GITHUB_REF}"
+            echo "unity_version=${UNITY_VERSION}"
+            echo "test_mode=${{ matrix.testMode }}"
+            echo "has_unity_license=${HAS_UNITY_LICENSE}"
+            echo "has_unity_serial=${HAS_UNITY_SERIAL}"
+            echo "has_unity_email=${HAS_UNITY_EMAIL}"
+            echo "has_unity_password=${HAS_UNITY_PASSWORD}"
+            echo "has_personal_license=${HAS_PERSONAL_LICENSE}"
+            echo "has_pro_license=${HAS_PRO_LICENSE}"
+            echo "has_both_license_types=${HAS_BOTH_LICENSE_TYPES}"
+          } > "$diagnostics_dir/run-context.txt"
+
+          git status --short > "$diagnostics_dir/git-status.txt"
+          git log --oneline -5 > "$diagnostics_dir/git-log.txt"
+
+          if [ -d "artifacts" ]; then
+            find artifacts -maxdepth 4 -type f | sort > "$diagnostics_dir/artifacts-file-list.txt"
+          fi
+
+          if [ -d "Library/Logs" ]; then
+            mkdir -p "$diagnostics_dir/LibraryLogs"
+            find Library/Logs -maxdepth 3 -type f \( -name "*.log" -o -name "*.txt" \) -print0 | while IFS= read -r -d '' log_file; do
+              cp "$log_file" "$diagnostics_dir/LibraryLogs/$(basename "$log_file")" || true
+            done
+          fi
+
       - name: Upload Unity test results
-        if: always() && (env.HAS_PERSONAL_LICENSE == 'true' || env.HAS_PRO_LICENSE == 'true') && env.HAS_BOTH_LICENSE_TYPES != 'true'
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: unity-${{ matrix.testMode }}-test-results
-          path: artifacts
+          path: |
+            artifacts
+            CodeCoverage
+          if-no-files-found: ignore
+
+      - name: Upload Unity diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-${{ matrix.testMode }}-diagnostics
+          path: ci-diagnostics/${{ matrix.testMode }}
           if-no-files-found: ignore

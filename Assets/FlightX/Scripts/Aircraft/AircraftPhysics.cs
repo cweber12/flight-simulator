@@ -82,7 +82,7 @@ namespace FlightX.Aircraft
                 rb = GetComponent<Rigidbody>();
             }
 
-            rb.velocity = Vector3.zero;
+            rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
             UpdateDerivedState();
         }
@@ -96,7 +96,7 @@ namespace FlightX.Aircraft
         {
             if (rb != null && settings != null)
             {
-                rb.angularDrag = settings.AngularDrag;
+                rb.angularDamping = settings.AngularDrag;
             }
         }
 
@@ -118,7 +118,7 @@ namespace FlightX.Aircraft
 
         private void ApplyLift()
         {
-            float forwardSpeed = Mathf.Max(0f, Vector3.Dot(rb.velocity, transform.forward));
+            float forwardSpeed = Mathf.Max(0f, Vector3.Dot(rb.linearVelocity, transform.forward));
             float liftScale = forwardSpeed < settings.StallSpeed ? 0.25f : 1f;
             float liftForce = forwardSpeed * forwardSpeed * settings.LiftCoefficient * liftScale;
 
@@ -127,7 +127,7 @@ namespace FlightX.Aircraft
 
         private void ApplyDrag()
         {
-            Vector3 velocity = rb.velocity;
+            Vector3 velocity = rb.linearVelocity;
             float speed = velocity.magnitude;
             if (speed > 0.01f)
             {
@@ -164,9 +164,9 @@ namespace FlightX.Aircraft
             }
 
             IsGrounded = CheckGrounded();
-            ForwardSpeedMetersPerSecond = Vector3.Dot(rb.velocity, transform.forward);
+            ForwardSpeedMetersPerSecond = Vector3.Dot(rb.linearVelocity, transform.forward);
             AltitudeMeters = transform.position.y;
-            VerticalSpeedMetersPerSecond = rb.velocity.y;
+            VerticalSpeedMetersPerSecond = rb.linearVelocity.y;
             IsStalling = !IsGrounded && ForwardSpeedMetersPerSecond < (settings != null ? settings.StallSpeed : 28f);
         }
 

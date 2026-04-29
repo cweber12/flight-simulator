@@ -68,7 +68,7 @@ namespace FlightX.Aircraft
             LastImpactSpeed = 0f;
 
             transform.SetPositionAndRotation(startPosition, startRotation);
-            rb.velocity = Vector3.zero;
+            rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
 
             if (aircraftPhysics != null)

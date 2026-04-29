@@ -49,3 +49,4 @@ sysinfo.txt
 # Logs
 *.log
 gh-actions-logs*.txt
+gh-actions-logs/

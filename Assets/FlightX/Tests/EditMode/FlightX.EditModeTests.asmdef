@@ -2,9 +2,7 @@
     "name": "FlightX.EditModeTests",
     "rootNamespace": "FlightX.Tests",
     "references": [
-        "FlightX.Runtime",
-        "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "FlightX.Runtime"
     ],
     "includePlatforms": [
         "Editor"
