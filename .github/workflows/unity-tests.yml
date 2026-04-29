@@ -16,7 +16,7 @@ permissions:
 
 env:
   UNITY_VERSION: 6000.1.14f1
-  HAS_PERSONAL_LICENSE: ${{ secrets.UNITY_LICENSE != '' }}
+  HAS_PERSONAL_LICENSE: ${{ secrets.UNITY_LICENSE != '' && secrets.UNITY_EMAIL != '' && secrets.UNITY_PASSWORD != '' }}
   HAS_PRO_LICENSE: ${{ secrets.UNITY_SERIAL != '' && secrets.UNITY_EMAIL != '' && secrets.UNITY_PASSWORD != '' }}
   HAS_BOTH_LICENSE_TYPES: ${{ secrets.UNITY_LICENSE != '' && secrets.UNITY_SERIAL != '' }}
 
@@ -76,7 +76,7 @@ jobs:
         shell: bash
         run: |
           echo "Unity tests are configured but skipped because license secrets are missing."
-          echo "For a Personal license, add UNITY_LICENSE."
+          echo "For a Personal license, add UNITY_LICENSE, UNITY_EMAIL, and UNITY_PASSWORD."
           echo "For a Pro license, add UNITY_SERIAL, UNITY_EMAIL, and UNITY_PASSWORD."
           echo "Then rerun this workflow from the Actions tab."
 
@@ -86,7 +86,7 @@ jobs:
         run: |
           echo "Both UNITY_LICENSE and UNITY_SERIAL are configured."
           echo "Use exactly one Unity activation mode for CI:"
-          echo "- Personal/ULF activation: UNITY_LICENSE only."
+          echo "- Personal/ULF activation: UNITY_LICENSE, UNITY_EMAIL, and UNITY_PASSWORD."
           echo "- Pro serial activation: UNITY_SERIAL, UNITY_EMAIL, and UNITY_PASSWORD."
           echo "Remove the unused secret and rerun the workflow."
           exit 1
@@ -96,6 +96,8 @@ jobs:
         uses: game-ci/unity-test-runner@v4.3.1
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           projectPath: .
           unityVersion: ${{ env.UNITY_VERSION }}

@@ -30,8 +30,10 @@ Open the repository on GitHub, then go to:
 For a Unity Personal license, add:
 
 - `UNITY_LICENSE`
+- `UNITY_EMAIL`
+- `UNITY_PASSWORD`
 
-For this repository, the Personal/ULF path uses only `UNITY_LICENSE`. The license file is created locally in Unity Hub, then its contents are stored as a GitHub Actions secret.
+For this repository, the Personal/ULF path follows GameCI's current guidance: the license file is created locally in Unity Hub, then its contents and Unity account credentials are stored as GitHub Actions secrets.
 
 For a Unity Pro license, add:
 
@@ -47,7 +49,7 @@ GameCI serial activation passes `UNITY_PASSWORD` into the Docker-based Unity act
 
 Recommended fix:
 
-1. Prefer Personal/ULF activation with `UNITY_LICENSE` when possible.
+1. Prefer Personal/ULF activation with `UNITY_LICENSE`, `UNITY_EMAIL`, and `UNITY_PASSWORD` when possible.
 2. If using Pro serial activation, use a Unity ID password that avoids shell metacharacters.
 3. Store it as a GitHub Actions secret named `UNITY_PASSWORD`, not as a plain variable.
 4. If a password appears in workflow logs, rotate it immediately.
@@ -65,6 +67,7 @@ GameCI's current guidance for a Personal license is simpler than the older activ
 2. Activate your Personal license in Unity Hub on your machine.
 3. Locate the local `Unity_lic.ulf` file.
 4. Copy the full contents of that file into the GitHub Actions secret `UNITY_LICENSE`.
+5. Add `UNITY_EMAIL` and `UNITY_PASSWORD` as GitHub Actions secrets for the same Unity account that created the license.
 
 Common license file locations:
 
