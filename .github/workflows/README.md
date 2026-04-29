@@ -1,14 +1,78 @@
-# Unity CI Notes
+# Unity CI Setup
 
-FlightX does not have an active GitHub Actions Unity workflow yet.
+FlightX includes a conservative GitHub Actions workflow at `unity-tests.yml`. It connects the repository project to Unity by checking out this VS Code/Unity project, restoring a Unity `Library` cache, and running Unity Test Runner through GameCI.
 
-Unity CI can be added later with `game-ci/unity-test-runner`, but it needs project-specific setup before it should run on every push:
+The workflow is intentionally license-gated. It will not fail a fresh repository just because Unity license secrets have not been configured yet. Instead, it prints setup instructions and skips the Unity test step until the required secrets exist.
 
-- Confirm the exact Unity editor version used by the project.
-- Choose a Unity license activation strategy.
-- Add the required GitHub secrets for license activation.
-- Decide whether CI should run EditMode tests only or both EditMode and PlayMode tests.
+## What the Workflow Runs
 
-For now, run tests locally through Unity Test Runner:
+- Repository hygiene checks for generated Unity folders and old Input polling.
+- EditMode tests through Unity Test Runner.
+- PlayMode tests through Unity Test Runner.
+- Test result artifact upload when Unity tests run.
 
-`Window > General > Test Runner`
+## Unity Version
+
+The project currently uses:
+
+`6000.1.14f1`
+
+This value comes from `ProjectSettings/ProjectVersion.txt` and is set in `unity-tests.yml` as `UNITY_VERSION`.
+
+## Required GitHub Secrets
+
+Open the repository on GitHub, then go to:
+
+`Settings > Secrets and variables > Actions > New repository secret`
+
+For a Unity Personal license, add:
+
+- `UNITY_LICENSE`
+- `UNITY_EMAIL`
+- `UNITY_PASSWORD`
+
+For a Unity Pro license, add:
+
+- `UNITY_SERIAL`
+- `UNITY_EMAIL`
+- `UNITY_PASSWORD`
+
+GameCI documents Unity activation setup here:
+
+- https://game.ci/docs/github/activation/
+- https://game.ci/docs/github/test-runner/
+
+## Local Workflow Before Pushing
+
+1. Open the project in Unity Hub.
+2. Let Unity import and compile.
+3. Run `Window > General > Test Runner`.
+4. Run EditMode tests.
+5. Run PlayMode tests.
+6. Commit only source, settings, tests, and docs.
+7. Push to GitHub and check the `Unity Tests` workflow.
+
+## Prompt Used To Create This Pipeline
+
+Use this prompt when asking Codex to recreate or update the CI pipeline:
+
+```text
+You are working inside the FlightX_Unity Unity project.
+Read CODEX_CONTEXT.md, Assets/FlightX/DEVELOPMENT.md, and .github/workflows/README.md.
+Create or update a conservative GitHub Actions Unity CI pipeline.
+Use the Unity version from ProjectSettings/ProjectVersion.txt.
+Use game-ci/unity-test-runner@v4 to run EditMode and PlayMode tests.
+Gate Unity test execution behind Unity license secrets so a fresh repo does not fail before secrets are configured.
+Support Unity Personal secrets: UNITY_LICENSE, UNITY_EMAIL, UNITY_PASSWORD.
+Support Unity Pro secrets: UNITY_SERIAL, UNITY_EMAIL, UNITY_PASSWORD.
+Add a lightweight repository hygiene job that checks generated Unity folders are not tracked and FlightX runtime scripts do not use old Input.Get polling.
+Cache the Unity Library folder with actions/cache.
+Upload Unity test artifacts when tests run.
+Do not add build/deploy steps, package changes, generated Unity folders, or Git LFS.
+Update .github/workflows/README.md with setup instructions and manual steps.
+Validate YAML and summarize what still needs to be configured in GitHub.
+```
+
+## Notes
+
+This workflow tests the Unity project in CI. It does not build a player, deploy artifacts, or create releases.

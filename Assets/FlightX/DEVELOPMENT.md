@@ -33,6 +33,12 @@ The current scaffold uses Input System and TextMeshPro. Cinemachine is recommend
 3. Run `PlayMode` tests for runtime smoke coverage.
 4. Keep tests independent of a specific scene until stable prefabs and `TestFlight` exist.
 
+## GitHub Actions
+
+The repository includes `.github/workflows/unity-tests.yml` for CI. It runs repository hygiene checks on every push or pull request to `main`, then runs Unity EditMode and PlayMode tests when Unity license secrets are configured in GitHub.
+
+See `.github/workflows/README.md` for the required `UNITY_LICENSE` or `UNITY_SERIAL` setup.
+
 ## Do Not Commit
 
 - `Library/`
