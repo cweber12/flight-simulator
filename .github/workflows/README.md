@@ -4,6 +4,8 @@ FlightX includes a conservative GitHub Actions workflow at `unity-tests.yml`. It
 
 The workflow is intentionally license-gated. It will not fail a fresh repository just because Unity license secrets have not been configured yet. Instead, it prints setup instructions and skips the Unity test step until the required secrets exist.
 
+Use GitHub **repository secrets**, not repository variables or environment variables. Secrets are masked in logs; variables can be printed by Actions and third-party actions.
+
 ## What the Workflow Runs
 
 - Repository hygiene checks for generated Unity folders and old Input polling.
@@ -31,11 +33,26 @@ For a Unity Personal license, add:
 - `UNITY_EMAIL`
 - `UNITY_PASSWORD`
 
+The workflow only passes `UNITY_LICENSE` to GameCI for Personal activation. The email/password secrets are kept as setup validation so the workflow can tell whether the Personal secret set is complete.
+
 For a Unity Pro license, add:
 
 - `UNITY_SERIAL`
 - `UNITY_EMAIL`
 - `UNITY_PASSWORD`
+
+Use exactly one activation mode. Do not configure both `UNITY_LICENSE` and `UNITY_SERIAL` at the same time.
+
+## Special Characters In Passwords
+
+GameCI serial activation passes `UNITY_PASSWORD` into the Docker-based Unity activation command. Passwords containing shell metacharacters such as `>`, `<`, `|`, `&`, `$`, backticks, or quotes can break the generated Docker command before Unity starts.
+
+Recommended fix:
+
+1. Prefer Personal/ULF activation with `UNITY_LICENSE` when possible.
+2. If using Pro serial activation, use a Unity ID password that avoids shell metacharacters.
+3. Store it as a GitHub Actions secret named `UNITY_PASSWORD`, not as a plain variable.
+4. If a password appears in workflow logs, rotate it immediately.
 
 GameCI documents Unity activation setup here:
 

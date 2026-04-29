@@ -18,8 +18,22 @@ env:
   UNITY_VERSION: 6000.1.14f1
   HAS_PERSONAL_LICENSE: ${{ secrets.UNITY_LICENSE != '' && secrets.UNITY_EMAIL != '' && secrets.UNITY_PASSWORD != '' }}
   HAS_PRO_LICENSE: ${{ secrets.UNITY_SERIAL != '' && secrets.UNITY_EMAIL != '' && secrets.UNITY_PASSWORD != '' }}
+  HAS_BOTH_LICENSE_TYPES: ${{ secrets.UNITY_LICENSE != '' && secrets.UNITY_SERIAL != '' }}
 
 jobs:
+  activation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: requestActivationFile
+        uses: game-ci/unity-request-activation-file@v2
+        with:
+          unityVersion: 6000.1.14f1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unity-activation-file
+          path: ${{ steps.requestActivationFile.outputs.filePath }}
+  
   repository-hygiene:
     name: Repository Hygiene
     runs-on: ubuntu-22.04
@@ -79,14 +93,35 @@ jobs:
           echo "For a Pro license, add UNITY_SERIAL, UNITY_EMAIL, and UNITY_PASSWORD."
           echo "Then rerun this workflow from the Actions tab."
 
-      - name: Run Unity tests
-        if: env.HAS_PERSONAL_LICENSE == 'true' || env.HAS_PRO_LICENSE == 'true'
+      - name: Prevent mixed Unity activation modes
+        if: env.HAS_BOTH_LICENSE_TYPES == 'true'
+        shell: bash
+        run: |
+          echo "Both UNITY_LICENSE and UNITY_SERIAL are configured."
+          echo "Use exactly one Unity activation mode for CI:"
+          echo "- Personal/ULF activation: UNITY_LICENSE only, plus UNITY_EMAIL and UNITY_PASSWORD for validation."
+          echo "- Pro serial activation: UNITY_SERIAL, UNITY_EMAIL, and UNITY_PASSWORD."
+          echo "Remove the unused secret and rerun the workflow."
+          exit 1
+
+      - name: Run Unity tests with Personal license file
+        if: env.HAS_PERSONAL_LICENSE == 'true' && env.HAS_PRO_LICENSE != 'true' && env.HAS_BOTH_LICENSE_TYPES != 'true'
         uses: game-ci/unity-test-runner@v4.3.1
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          projectPath: .
+          unityVersion: ${{ env.UNITY_VERSION }}
+          testMode: ${{ matrix.testMode }}
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Unity tests with Pro serial
+        if: env.HAS_PRO_LICENSE == 'true' && env.HAS_PERSONAL_LICENSE != 'true' && env.HAS_BOTH_LICENSE_TYPES != 'true'
+        uses: game-ci/unity-test-runner@v4.3.1
+        env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-          // UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
           projectPath: .
           unityVersion: ${{ env.UNITY_VERSION }}
@@ -94,7 +129,7 @@ jobs:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Unity test results
-        if: always() && (env.HAS_PERSONAL_LICENSE == 'true' || env.HAS_PRO_LICENSE == 'true')
+        if: always() && (env.HAS_PERSONAL_LICENSE == 'true' || env.HAS_PRO_LICENSE == 'true') && env.HAS_BOTH_LICENSE_TYPES != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: unity-${{ matrix.testMode }}-test-results
