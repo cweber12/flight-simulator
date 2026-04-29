@@ -22,7 +22,7 @@ env:
 jobs:
   repository-hygiene:
     name: Repository Hygiene
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -81,12 +81,12 @@ jobs:
 
       - name: Run Unity tests
         if: env.HAS_PERSONAL_LICENSE == 'true' || env.HAS_PRO_LICENSE == 'true'
-        uses: game-ci/unity-test-runner@v4
+        uses: game-ci/unity-test-runner@v4.3.1
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          // UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
           projectPath: .
           unityVersion: ${{ env.UNITY_VERSION }}
