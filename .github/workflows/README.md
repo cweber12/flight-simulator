@@ -30,10 +30,8 @@ Open the repository on GitHub, then go to:
 For a Unity Personal license, add:
 
 - `UNITY_LICENSE`
-- `UNITY_EMAIL`
-- `UNITY_PASSWORD`
 
-The workflow only passes `UNITY_LICENSE` to GameCI for Personal activation. The email/password secrets are kept as setup validation so the workflow can tell whether the Personal secret set is complete.
+For this repository, the Personal/ULF path uses only `UNITY_LICENSE`. The license file is created locally in Unity Hub, then its contents are stored as a GitHub Actions secret.
 
 For a Unity Pro license, add:
 
@@ -58,6 +56,23 @@ GameCI documents Unity activation setup here:
 
 - https://game.ci/docs/github/activation/
 - https://game.ci/docs/github/test-runner/
+
+## Personal ULF Setup
+
+GameCI's current guidance for a Personal license is simpler than the older activation-file flow:
+
+1. Sign in to Unity Hub locally.
+2. Activate your Personal license in Unity Hub on your machine.
+3. Locate the local `Unity_lic.ulf` file.
+4. Copy the full contents of that file into the GitHub Actions secret `UNITY_LICENSE`.
+
+Common license file locations:
+
+- Windows: `C:\ProgramData\Unity\Unity_lic.ulf`
+- macOS: `/Library/Application Support/Unity/Unity_lic.ulf`
+- Linux: `~/.local/share/unity3d/Unity/Unity_lic.ulf`
+
+The older GitHub activation-file action has been deprecated. You do not need that workflow if you already have a valid locally activated Personal license file.
 
 ## Local Workflow Before Pushing
 
