@@ -43,6 +43,8 @@ For a Unity Pro license, add:
 
 Use exactly one activation mode. Do not configure both `UNITY_LICENSE` and `UNITY_SERIAL` at the same time.
 
+The workflow validates the secret combination before starting Unity. It fails early when it detects a partial setup, such as `UNITY_SERIAL` without `UNITY_EMAIL` and `UNITY_PASSWORD`, so the GameCI Docker step does not produce a vague activation error.
+
 ## Special Characters In Passwords
 
 GameCI serial activation passes `UNITY_PASSWORD` into the Docker-based Unity activation command. Passwords containing shell metacharacters such as `>`, `<`, `|`, `&`, `$`, backticks, or quotes can break the generated Docker command before Unity starts.
@@ -86,6 +88,24 @@ The older GitHub activation-file action has been deprecated. You do not need tha
 5. Run PlayMode tests.
 6. Commit only source, settings, tests, and docs.
 7. Push to GitHub and check the `Unity Tests` workflow.
+
+## CI Failure Review Prompts
+
+Use these prompts when asking Codex to investigate future workflow failures:
+
+```text
+Review gh-actions-logs.txt and .github/workflows/unity-tests.yml.
+Identify the first fatal error, distinguish it from noisy non-fatal log lines, and explain which GitHub secrets or workflow steps caused it.
+Patch the workflow only if the repository can make the failure clearer or prevent it.
+Do not change Unity packages or generated Unity folders.
+Validate YAML and summarize the manual GitHub secret changes still required.
+```
+
+```text
+Review the Unity Test Runner failure logs.
+Determine whether the failure happened during GitHub checkout, license activation, Unity project import, script compilation, EditMode tests, PlayMode tests, or artifact upload.
+Provide the exact next action for the owner and implement any safe workflow/documentation improvements.
+```
 
 ## Prompt Used To Create This Pipeline
 
