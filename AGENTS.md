@@ -54,6 +54,37 @@ Use the smallest process that safely fits the task.
 - Revert unrelated local changes.
 - Remove or disable tests only to make the suite pass.
 - Edit generated or vendor-owned content unless the task specifically requires it.
+- Create a git commit unless the user explicitly asks for it.
+
+## Commit Message Policy
+
+- Provide a commit message whenever changes are made.
+- Do not run `git commit` unless the user explicitly requests committing.
+
+### Allowed Commit Types
+
+- `feat`: Add a new feature.
+- `fix`: Fix a bug.
+- `refactor`: Restructure code without adding a feature or fixing a bug.
+- `chore`: Miscellaneous non-feature, non-fix changes outside src/test.
+- `perf`: Performance-focused refactor.
+- `ci`: Continuous integration related changes.
+- `ops`: Operational or infrastructure/deployment changes.
+- `build`: Build tooling, dependencies, project version, or pipeline changes.
+- `docs`: Documentation updates.
+- `style`: Formatting-only changes with no behavior impact.
+- `revert`: Revert a previous commit.
+- `test`: Add or correct tests.
+
+### Commit Message Rules
+
+- Use imperative mood in the subject (example: `feat: Add input mapping tests`).
+- Keep the subject line to 50 characters or fewer.
+- Capitalize the subject line.
+- Do not end the subject line with a period.
+- Separate subject and body with one blank line.
+- Wrap body lines at 72 characters.
+- Use the body to explain what changed and why.
 
 ## Verification Expectations
 
